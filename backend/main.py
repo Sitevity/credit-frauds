@@ -1,64 +1,63 @@
-import uvicorn
-from fastapi import FastAPI
-from backend.model import User
+import pandas as pd
+import pickle
 from pathlib import Path
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from config.logger import logger
+from backend.src.stage_1_data import downloading_data, preprocessing_data
+from backend.src.stage_2_eda import q1, q2, q3, q4, q5, q6
+from backend.src.stage_3_train import model
+from backend.src.stage_4_reports import data_report
+from backend.src.stage_5_predict import confusion, balanced_df
 
-from src.predict import prediction
-from src.metrics import metrics
-from src.eda import get_eda_obj
-print('after import')
-appl = FastAPI()
+preprocessing_train = Path("artifacts/data/processed/train.csv")
+preprocessing_test = Path("artifacts/data/processed/test.csv")
+data_file = Path("artifacts/data/raw/creditcard.csv")
+model_path = Path('artifacts/model/voting.pkl')
+img_dir = Path("artifacts/eda")
+voting_classifier = pickle.load(open(model_path, 'rb'))
+seed = 42 # Answer of everything(Meaning of life)
 
+def whole_backend():
 
+    logger.info("Starting the data downloading and preprocessing stage...")
+    downloading_data(data_file)
+    preprocessing_data(preprocessing_train,preprocessing_test, data_file)
+    logger.info("Data downloading and preprocessing completed.")
 
-@appl.get("/")
-def index() -> dict:
-    """
-    Root endpoint to test that the API is up and running.
+    logger.info("Starting the EDA stage...")
+    df = pd.read_csv(data_file)
+    df = df.sample(frac=1, random_state = seed)
+    fraud_df = df.loc[df['Class'] == 1]
+    non_fraud_df = df.loc[df['Class'] == 0].sample(500, random_state = seed)
+    normal_distributed_df = pd.concat([fraud_df, non_fraud_df], axis = 0)
+    new_df = normal_distributed_df.sample(frac=1, random_state=seed)
 
-    Returns:
-        A dictionary with a simple message.
-    """
-    return {"message": "Hello, World"}
+    q1(df, new_df, img_dir)
+    q2(df, new_df, img_dir)
+    q3(new_df, img_dir)
+    q4(new_df, img_dir)
+    q5(new_df, img_dir)
+    q6(new_df, img_dir)
+    logger.info("EDA stage completed.")
 
-@appl.get('/Welcome')
-def get_name(name: str):
-    return {"Welcome": f"{name}"}
+    logger.info("Starting the model training stage...")
+    train_df = pd.read_csv(preprocessing_train)
+    test_df = pd.read_csv(preprocessing_test)
+    model(train_df, test_df)
+    logger.info("Model training stage completed.")
 
-@appl.post('/predict')
-def predict(data: User):
-    received = data.dict()
-    type = received['type']
-    rpm = received['rpm']
-    torque = received['torque']
-    
-    tool_wear = received['tool_wear']
-    air_temp = received['air_temp']
-    process_temp = received['process_temp']
+    logger.info("Starting the Report Section")
+    data_report(preprocessing_train, preprocessing_test, voting_classifier)
+    logger.info('Data report saved')
 
-    result1, result2 = prediction(type, rpm, torque, tool_wear, air_temp, process_temp)
+    logger.info('Confusion Prediction Started...')
+    confusion(preprocessing_test, voting_classifier)
+    balanced_df(df)
+    logger.info('Confusion Prediction Ended..')
 
-
-    return {"Machine Failure? ": result1,
-            "Type of Failure: ": result2}
-
-@appl.get('/metrics')
-def get_metrics():
-    scores1, report1, best_model_name1, scores2, report2,best_model_name2 = metrics()
-    return {"Model 1 Scores": scores1,
-            "Model 1 Report": report1,
-            "Best Model Name 1": best_model_name1,
-            "Model 2 Scores": scores2,
-            "Model 2 Report": report2,
-            "Best Model Name 2": best_model_name2}
-
-@appl.get('/eda')
-def get_eda():
-    eda_json = get_eda_obj()
-    return eda_json
-
-
+    logger.info("All stages completed.")
 
 if __name__ == "__main__":
-    uvicorn.run(appl, host="0.0.0.0", port=8000)
-
+    whole_backend()
