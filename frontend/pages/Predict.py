@@ -124,6 +124,7 @@ def run_predict():
         df_example['scaled_amount'] = rob_scaler.transform(df_example['Amount'].values.reshape(-1, 1))
         df_example['scaled_time'] = rob_scaler.transform(df_example['Time'].values.reshape(-1, 1))
         df_example.drop(['Time', 'Amount'], axis=1, inplace=True)
+        
 
         # Predict the output using the loaded model
         prediction_proba = voting_classifier.predict_proba(df_example)[:, 1]

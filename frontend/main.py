@@ -151,6 +151,11 @@ The pipeline demonstrates the end-to-end workflow for developing and evaluating 
 ## 8. Conclusion
 
 The web application for credit card fraud detection provides a user-friendly interface for predicting fraudulent transactions and analyzing model performance. By leveraging machine learning techniques and addressing class imbalance, the application can help financial institutions reduce financial losses and improve customer experience.
+
+## 9. Reference
+
+This app was taken inspiration from this [project](https://github.com/vishwasg217/Predictive-Maintenance). You might checking the main notebook I made on Kaggle using [kernels](https://www.kaggle.com/code/luficergfree/voting-for-imbalanced-dataset-with-roc-0-98/)
 """
+
 )
 

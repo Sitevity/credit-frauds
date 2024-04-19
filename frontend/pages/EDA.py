@@ -5,6 +5,7 @@ import os
 # Add the parent directory of 'backend' to the Python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
+@st.cache_data()
 def run_eda():
     st.title("EDA Questions")
     st.write("1. What is the distribution of the 'Class' (target) in the dataset? How many instances have Fraud and how many have not?")
