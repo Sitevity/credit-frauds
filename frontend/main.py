@@ -3,11 +3,6 @@ import sys
 import os
 # Add the parent directory of 'backend' to the Python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from config.logger import logger
-from frontend.pages.eda import run_eda
-from frontend.pages.reports import run_reports
-from frontend.pages.performance import run_performance
-from frontend.pages.predict import run_predict
 
 st.set_page_config(layout="wide", page_icon="🌐", page_title="Credit Fraud", initial_sidebar_state="expanded", menu_items=None)
 st.markdown(
